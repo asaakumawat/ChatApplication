@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+<name>Shapes</name><Style id="thickLine"><LineStyle><width>2.5</width></LineStyle></Style>
+<Style id="transparent50Poly"><PolyStyle><color>7fffffff</color></PolyStyle></Style>
+<Placemark>
+<name>RERA Testing</name>
+<description>RERA Testing</description>
+<LineString><coordinates>75.33599853515625,27.229477699069182,0 75.35247802734375,26.94092502560817,0 75.48431396484375,27.23436200952058,0 75.81047058105469,27.117629500627356,0 </coordinates></LineString><styleUrl>#thickLine</styleUrl></Placemark>
+<Placemark>
+<name>Shape</name>
+<description>Shape</description>
+<LineString><coordinates>75.34217834472656,27.230027172333102,0 75.47538757324219,27.260550445583494,0 75.56053161621094,27.26299194567135,0 75.54542541503906,27.22880606726593,0 75.54954528808594,27.21415176203926,0 75.81184387207031,27.12374097717731,0 75.81184387207031,27.121296426623427,0 75.81047058105469,27.12007413131302,0 </coordinates></LineString><styleUrl>#thickLine</styleUrl></Placemark>
+</Document>
+</kml>
