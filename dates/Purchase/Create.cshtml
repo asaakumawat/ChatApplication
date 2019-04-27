@@ -1,0 +1,270 @@
+﻿@model FarmersStop.Web.Models.PurchaseModel
+@{
+    ViewBag.Title = "Purchase";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section PageHeader{
+    <div class="row">
+        <div class="col-sm-6">
+            <h1> @(Model.Id == 0 ? "New" : "Edit") Purchase</h1>
+        </div>
+        <div class="col-sm-6 ">
+            <a href="/Seed Category/List" class="btn btn-primary pull-right">All Purchases</a>
+        </div>
+    </div>
+}
+@using (Html.BeginForm("Create", "Purchase", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+    <div class="box box-primary">
+        <div class="box-header with-border">
+            <h3 class="box-title"> Purchase Detail</h3>
+        </div>
+        <div class="box-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Date</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(m => m.Date, new { @class = "form-control", @autocomplete = false })
+                            @Html.ValidationMessageFor(m => m.Date)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Vendor</label>
+                        <div class="col-sm-8">
+                            @Html.DropDownListFor(m => m.VendorId, Model.Vendors, "Select", new { @class = "form-control select2" })
+                            @Html.ValidationMessageFor(m => m.VendorId)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Bill No.</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(m => m.BillNo, new { @class = "form-control " })
+                            @Html.ValidationMessageFor(m => m.BillNo)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Address</label>
+                        <div class="col-sm-8">
+                            <label id="VendorAddress" class="form-control">@Model.VendorAddress</label>
+                            @*@Html.DisplayFor(a => a.VendorAddress, new { @class = "form-control" })*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="table table-bordered table-responsive">
+                        <thead>
+                            <tr>
+                                <td>
+                                    Product Name
+                                </td>
+                                <td>
+                                    HSN Code
+                                </td>
+
+                                <td>
+                                    Quantity
+                                </td>
+                                <td>
+                                    Rate
+                                </td>
+                                <td>
+                                    Amount
+                                </td>
+                                <td>
+                                    Lot No.
+                                </td>
+                                <td>
+                                    Expiry date
+                                </td>
+                                <td width="100px">
+                                    Action
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody id="purchasedetails">
+                            @for (int i = 0; i < Model.PurchaseDetails.Count(); i++)
+                            {
+
+
+                                <tr data-parent-id="@Model.PurchaseDetails[i].ParentProductId" data-row-index="@i">
+                                    <td>
+                                        @Html.HiddenFor(a => Model.PurchaseDetails[i].Id)
+                                        @Html.HiddenFor(a => Model.PurchaseDetails[i].ParentProductId, new { @class = "parentId" })
+                                        @Html.HiddenFor(a => Model.PurchaseDetails[i].IsActive, new { @class = "isactive" })
+                                        @if (i == 0)
+                                        {
+                                            @Html.DropDownListFor(m => Model.PurchaseDetails[i].ProductId, Model.Products, "Select", new { @class = "form-control productId" })
+                                        }
+                                        else
+                                        {
+                                            @Html.DropDownListFor(m => Model.PurchaseDetails[i].ProductId, Model.Products, "Select", new { @class = "form-control productId select2" })
+                                        }
+                                        @Html.ValidationMessageFor(m => Model.PurchaseDetails[i].ProductId)
+
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].HSNCode, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].HSNCode)
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Quantity, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Quantity)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Rate, new { @class = "form-control rate" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Rate)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Amount, new { @class = "form-control amount" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Amount)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].LotNo, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].LotNo)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Expirydate, new { @class = "form-control Expirydate" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Expirydate)
+                                    </td>
+                                    <td>
+                                        <a class="btnAddFreeItem btn btn-primary" title="Add Free Item ">+</a>
+                                        <a class="btnRemove btn btn-warning @(i==0?"hide":"") title="Remove Row"><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <table id="temptableforrow" style="display:none;"></table>
+                    <button class="btn btn-primary" id="btnAddNew" type="button">Add New Row</button>
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="box-footer with-border">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group text-center">
+                        <button type="submit" id="btnSave" class="btn btn-primary">Submit</button>
+                        <a href="/Purchase/List" class="btn btn-warning">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    var rowTemplate;
+    $(function () {
+
+        GetFirstRowAsTemplate();
+
+        $('#VendorId').change(function () {
+            GetVendorAddress($(this).val());
+        });
+
+        $('#Date,#PurchaseDetails_0__Expirydate').datepicker(defaultDatePickerOptions)
+
+        $('#btnSave').click(function () {
+            $('form').data('validator', null);
+            $.validator.unobtrusive.parse($('form'));
+            if ($('form').valid()) {
+                //loader(true);
+            }
+        })
+
+        $('#btnAddNew').click(function () {
+            AddNewRow(-1, 0);
+        })
+
+        $(document).off('click', '.btnAddFreeItem')
+            .on('click', '.btnAddFreeItem', function () {
+                debugger;
+                var index = $(this).parents('tr').index();
+                var productId = $(this).parents('tr').children().find('.productId').val();
+                if (productId > 0) {
+                    AddNewRow(index, productId);
+                }
+                else {
+                    ErrorMessage("Please select Product");
+                }
+            })
+
+        $(document).off('click', '.btnRemove')
+            .on('click', '.btnRemove', function () {
+                var productId = $(this).parents('tr').find('.productId').val();
+                var childrenItemCount = $('tr[data-parent-id="' + productId + '"]').children().find('.isactive[value="true"]').length;
+                if (childrenItemCount > 0) {
+                    ErrorMessage("Item has free products . Can't delete")
+                    return;
+                }
+                $(this).parents('tr').find(":input[type=text],select").attr("disabled", true);
+                $(this).parents('tr').children().find(".isactive").val(false);
+                $(this).parents('tr').addClass('hide');
+            })
+    })
+    function GetFirstRowAsTemplate() {
+        var $tr = $('#purchasedetails').children('tr:first');
+        $tr.html($tr.html().replace(/hide/g, ''));
+        $('#temptableforrow').append($tr.clone());
+        $tr.remove();
+
+
+
+    }
+    function AddNewRow(index, parentId) {
+        var $tr = $('#temptableforrow').children('tr:first');
+        $clone = $tr.clone();;
+
+        var rowNumber = $('#purchasedetails tr').length + 1;
+        $clone.html($clone.html().replace(/0/g, rowNumber));
+        $clone.find('input:text').val('');
+        //$clone.find('select').val('');
+        if (index > -1) {
+            $clone.html($clone.html().replace('btnAddFreeItem', 'btnAddFreeItem hide '));
+            //$clone.find(':text,:hidden').val('');
+            //$clone.find('select').val('');
+            $clone.find('input:text').val('');
+            $clone.attr('data-parent-id', parentId);
+            $clone.find('.parentId').val(parentId);
+            $clone.find('.isactive').val(true);
+            $('#purchasedetails tr').eq(index).after($clone);
+        }
+        else {
+            $('#purchasedetails tr:last').after($clone);
+        }
+        $('#PurchaseDetails_' + rowNumber + '__Expirydate').datepicker(defaultDatePickerOptions)
+        $('#PurchaseDetails_' + rowNumber + '__ProductId').select2();
+
+    }
+
+    function GetVendorAddress(vendorId) {
+        if (vendorId == 0) {
+            $('#VendoerAddress').text('');
+            return;
+        }
+        $.get("/Customer/GetVendorAddress?vendorId=" + vendorId, function (address) {
+            console.log(address);
+            $('#VendorAddress').text(address);
+        })
+    }
+
+</script>

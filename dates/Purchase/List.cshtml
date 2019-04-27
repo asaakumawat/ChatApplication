@@ -1,0 +1,29 @@
+﻿
+@{
+    ViewBag.Title = "All Purchases";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section PageHeader{
+    <div class="row">
+        <div class="col-sm-6">
+            <h1>  All Purchases</h1>
+        </div>
+        <div class="col-sm-6 ">
+            <a href="/Purchase/Create" class="btn btn-primary pull-right">+ Add New</a>
+        </div>
+    </div>
+}
+<div class="box box-primary">
+    <div class="box-body">
+        @(Html.DS4UGrid().Grid("Grid")
+                                                   .Url(Url.Action("GetPurchaseList", "Purchase"))
+                                                   .Height(500)
+                                                   .Mod(o => o.PageInfo().PageSize().ColumnsSelector().AutoMiniPager())
+                                                   .Columns(
+                                                               new Column { Bind = "Name", Header = "Name" },
+                                                               new Column { Bind = "PurchaseCode", Header = "Purchase Code" },
+                                                               new Column { Bind = "PurchaseFullName", Header = "Full Name" },
+                                                               new Column { Sortable = false, Groupable = false, Name = "Edit", Header = "Edit", ClientFormat = "<a href='/Purchase/Create/.Id'><i class='fa fa-edit'></i></a>" }
+                                           ).SingleColumnSort(true))
+    </div>
+</div>
