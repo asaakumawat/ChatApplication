@@ -1,0 +1,434 @@
+﻿@model FMS.Web.Models.PurchaseModel
+@{
+    ViewBag.Title = "Purchase";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 20px;
+        right: 3px;
+    }
+
+    .form-control {
+        height: 25px;
+        padding: 2px 6px;
+    }
+
+    .select2-container--default .select2-selection--single, .select2-selection .select2-selection--single {
+        padding: 2px 6px;
+        height: 25px;
+    }
+</style>
+@section PageHeader{
+    <div class="row">
+        <div class="col-sm-6">
+            <h1> @(Model.Id == 0 ? "New" : "Edit") Purchase</h1>
+        </div>
+        <div class="col-sm-6 ">
+            <a href="/Seed Category/List" class="btn btn-primary pull-right">All Purchases</a>
+        </div>
+    </div>
+}
+@using (Html.BeginForm("Create", "Purchase", FormMethod.Post, new { @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+    <div class="box box-primary">
+        @*<div class="box-header with-border">
+                <h3 class="box-title"> Detail</h3>
+            </div>*@
+        <div class="box-body">
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Date</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(m => m.Date, new { @class = "form-control", @autocomplete = false })
+                            @Html.ValidationMessageFor(m => m.Date)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Vendor</label>
+                        <div class="col-sm-8">
+                            @Html.DropDownListFor(m => m.VendorId, Model.Vendors, "Select", new { @class = "form-control select2" })
+                            @Html.ValidationMessageFor(m => m.VendorId)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group required">
+                        <label class="col-sm-4 control-label">Bill No.</label>
+                        <div class="col-sm-8">
+                            @Html.TextBoxFor(m => m.BillNo, new { @class = "form-control " })
+                            @Html.ValidationMessageFor(m => m.BillNo)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Address</label>
+                        <div class="col-sm-8">
+                            <label id="VendorAddress" class="form-control">@Model.VendorAddress</label>
+                            @*@Html.DisplayFor(a => a.VendorAddress, new { @class = "form-control" })*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="table table-bordered table-responsive">
+                        <thead>
+                            <tr>
+                                <td>
+                                    Product Name
+                                </td>
+                                <td>
+                                    HSN Code
+                                </td>
+
+                                <td>
+                                    Quantity
+                                </td>
+                                <td>
+                                    Rate
+                                </td>
+                                <td>
+                                    Amount
+                                </td>
+                                <td>
+                                    Lot No.
+                                </td>
+                                <td>
+                                    Expiry date
+                                </td>
+                                <td width="100px">
+                                    Action
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody id="purchasedetails">
+                            @for (int i = 0; i < Model.PurchaseDetails.Count(); i++)
+                            {
+
+
+                                <tr data-parent-id="@Model.PurchaseDetails[i].ParentProductId" data-row-index="@i">
+                                    <td>
+                                        @Html.HiddenFor(a => Model.PurchaseDetails[i].Id)
+                                        @Html.HiddenFor(a => Model.PurchaseDetails[i].ParentProductId, new { @class = "parentId" })
+                                        @Html.HiddenFor(a => Model.PurchaseDetails[i].IsActive, new { @class = "isactive" })
+                                        @if (i == 0)
+                                        {
+                                            @Html.DropDownListFor(m => Model.PurchaseDetails[i].ProductCode, Model.Products, "Select", new { @class = "form-control productId" })
+                                        }
+                                        else
+                                        {
+                                            @Html.DropDownListFor(m => Model.PurchaseDetails[i].ProductCode, Model.Products, "Select", new { @class = "form-control productId select2" })
+                                        }
+                                        @Html.ValidationMessageFor(m => Model.PurchaseDetails[i].ProductCode)
+
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].HSNCode, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].HSNCode)
+                                    </td>
+
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Quantity, new { @class = "form-control quantity", @onblur = "CalculateProductAmount(" + i + ")" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Quantity)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Rate, new { @class = "form-control rate", @onblur = "CalculateProductAmount(" + i + ")" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Rate)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Amount, new { @class = "form-control amount", @readonly = true })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Amount)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].LotNo, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].LotNo)
+                                    </td>
+                                    <td>
+                                        @Html.TextBoxFor(a => Model.PurchaseDetails[i].Expirydate, new { @class = "form-control Expirydate" })
+                                        @Html.ValidationMessageFor(a => Model.PurchaseDetails[i].Expirydate)
+                                    </td>
+                                    <td>
+                                        <a class="btnAddFreeItem btn btn-primary" title="Add Free Item ">+</a>
+                                        <a class="btnRemove btn btn-warning @(i==0?"hide":"") title="Remove Row"><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <button class="btn btn-primary" id="btnAddNew" type="button">Add New Row</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Shipping Charges</label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(m => m.ShippingCharge, new { @class = "form-control calculation" })
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">ISGT</label>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(m => m.TaxIGSTId, Model.IGST, "No Tax", new { @class = "form-control select2", @onchange = "CalculateTax('TaxIGSTId','lblIGSTTax')" })
+                        </div>
+                        @Html.LabelFor(m=>m.IGSTAmount ,new { @class = "col-sm-2" , @id = "lblIGSTTax" })
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Total Amount</label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(m => m.TotalAmount, new { @class = "form-control ", @readonly = true })
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Extra Charges</label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(m => m.ExtraCharge, new { @class = "form-control calculation" })
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">CSGT</label>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(m => m.TaxCGSTId, Model.CGST, "No Tax", new { @class = "form-control select2", @onchange = "CalculateTax('TaxCGSTId','lblCGSTTax')" })
+                        </div>
+                        @Html.LabelFor(m => m.CGSTAmount, new { @class = "col-sm-2", @id = "lblCGSTTax" })
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Total Tax</label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(m => m.TotalTax, new { @class = "form-control ", @readonly = true })
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Discount</label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(m => m.TotalDiscount, new { @class = "form-control calculation" })
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">SSGT</label>
+                        <div class="col-sm-6">
+                            @Html.DropDownListFor(m => m.TaxSGSTId, Model.SGST, "No Tax", new { @class = "form-control select2", @onchange = "CalculateTax('TaxSGSTId','lblSGSTTax')" })
+                        </div>
+                        @Html.LabelFor(m => m.SGSTAmount, new { @class = "col-sm-2", @id = "lblSGSTTax" })
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Total Net Amount</label>
+                        <div class="col-sm-6">
+                            @Html.TextBoxFor(m => m.TotalNetAmount, new { @class = "form-control ", @readonly = true })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box-footer with-border">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group text-center">
+                        <button type="submit" id="btnSave" class="btn btn-primary">Submit</button>
+                        <a href="/Purchase/List" class="btn btn-warning">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<table id="temptableforrow" style="display:none;"></table>
+<script>
+    var rowTemplate;
+    $(function () {
+        GetFirstRowAsTemplate();
+        $('#VendorId').change(function () {
+            GetVendorAddress($(this).val());
+        });
+        $('#Date,#PurchaseDetails_0__Expirydate,#PurchaseDetails_1__Expirydate').datepicker(defaultDatePickerOptions)
+        $('#btnSave').click(function () {
+            $('form').data('validator', null);
+            $.validator.unobtrusive.parse($('form'));
+            if ($('form').valid()) {
+                //loader(true);
+            }
+        })
+        $('#btnAddNew').click(function () {
+            AddNewRow(-1, 0);
+        })
+        $(document).off('click', '.productId')
+            .on('click', '.productId', function () {
+                var productId = $(this).val();
+                var productRowId = $(this).attr('id');
+                if (productId > 0) {
+                    $('.productId').each(function () {
+                        if ($(this).val() == productId && $(this).attr('id') != productRowId) {
+                            ErrorMessage('Same item already selected. Please select another item.');
+                            $('#' + productRowId).val('');
+                            $('#' + productRowId).focus();
+
+                        }
+                    })
+                }
+            });
+        $(document).off('click', '.btnAddFreeItem')
+            .on('click', '.btnAddFreeItem', function () {
+                var index = $(this).parents('tr').index();
+                var productId = $(this).parents('tr').children().find('.productId').val();
+                if (productId > 0) {
+                    AddNewRow(index, productId);
+                }
+                else {
+                    ErrorMessage("Please select Product");
+                }
+            })
+        $(document).off('click', '.btnRemove')
+            .on('click', '.btnRemove', function () {
+                var productId = $(this).parents('tr').find('.productId').val();
+                var childrenItemCount = $('tr[data-parent-id="' + productId + '"]').children().find('.isactive[value="true"]').length;
+                if (childrenItemCount > 0) {
+                    ErrorMessage("Item has free products . Can't delete")
+                    return;
+                }
+                $(this).parents('tr').find(":input[type=text],select").attr("disabled", true);
+                $(this).parents('tr').children().find(".isactive").val(false);
+                $(this).parents('tr').addClass('hide');
+                CalculateTotalAmount();
+            })
+        $(document).off('blur', '.calculation')
+            .on('blur', '.calculation', function () {
+                CalculateTotalNetAmount();
+            })
+    })
+    function CheckTaxSelection() {
+    }
+    function GetFirstRowAsTemplate() {
+        var $tr = $('#purchasedetails').children('tr:first');
+        $tr.html($tr.html().replace(/hide/g, ''));
+        $('#temptableforrow').append($tr.clone());
+        //$tr.remove();
+        $tr.find(":input[type=text],select").attr("disabled", true);
+        $tr.find(".isactive").val(false);
+        $tr.addClass('hide');
+        //var $tr1 = $('#purchasedetails').children('tr:first');
+        //$tr1.html($tr1.html().replace(/_1_/g, '_0_'));
+
+    }
+    function AddNewRow(index, parentId) {
+        var $tr = $('#temptableforrow').children('tr:first');
+        $clone = $tr.clone();;
+        var rowNumber = $('#purchasedetails tr').length + 1;
+        $clone.html($clone.html().replace(/0/g, rowNumber));
+        $clone.find('input:text').val('');
+        //$clone.find('select').val('');
+        if (index > -1) {
+            $clone.html($clone.html().replace('btnAddFreeItem', 'btnAddFreeItem hide ').replace('CalculateProductAmount(' + rowNumber + ')', ''));
+            //$clone.find(':text,:hidden').val('');
+            //$clone.find('select').val('');
+            $clone.find('input:text').val('');
+            $clone.attr('data-parent-id', parentId);
+            $clone.attr('data-free-row', true);
+            $clone.find('.rate').attr('readonly', true);
+            $clone.find('.parentId').val(parentId);
+            $clone.find('.isactive').val(true);
+            $('#purchasedetails tr').eq(index).after($clone);
+        }
+        else {
+            $('#purchasedetails tr:last').after($clone);
+        }
+        $('#PurchaseDetails_' + rowNumber + '__Expirydate').datepicker(defaultDatePickerOptions)
+        $('#PurchaseDetails_' + rowNumber + '__ProductCode').select2();
+    }
+    function GetVendorAddress(vendorId) {
+        if (vendorId == 0) {
+            $('#VendoerAddress').text('');
+            return;
+        }
+        $.get("/Customer/GetVendorAddress?vendorId=" + vendorId, function (address) {
+            console.log(address);
+            $('#VendorAddress').text(address);
+        })
+    }
+    function CalculateAllTax() {
+        CalculateTax('TaxIGSTId', 'lblIGSTTax');
+        CalculateTax('TaxCGSTId', 'lblCGSTTax');
+        CalculateTax('TaxSGSTId', 'lblSGSTTax');
+    }
+    function CalculateTax($this, taxLabel) {
+        var taxId = $('#' + $this).val();
+        if (taxId == '') {
+            $('#' + taxLabel).text(0);
+            CalculateTotalTax();
+            return;
+        }
+        $.get('/Tax/GetTaxRate?taxId=' + taxId, function (taxRate) {
+            var totalAmount = $('#TotalAmount').val(); totalAmount = isNaN(totalAmount) ? 0 : totalAmount;
+            var tax = (parseFloat(totalAmount) * parseFloat(taxRate)) / 100;
+            $('#' + taxLabel).text(tax);
+            CalculateTotalTax();
+        })
+    }
+    function CalculateTotalTax() {
+        var IGST = parseFloat($('#lblIGSTTax').text()); IGST = isNaN(IGST) ? 0 : IGST;
+        var CGST = parseFloat($('#lblCGSTTax').text()); CGST = isNaN(CGST) ? 0 : CGST;
+        var SGST = parseFloat($('#lblSGSTTax').text()); SGST = isNaN(SGST) ? 0 : SGST;
+        $('#TotalTax').val(IGST + CGST + SGST);
+        CalculateTotalNetAmount();
+    }
+    function CalculateProductAmount(index) {
+        var quantity = $('#PurchaseDetails_' + index + '__Quantity').val(); quantity = isNaN(quantity) ? 0 : quantity;
+        var rate = $('#PurchaseDetails_' + index + '__Rate').val(); rate = isNaN(rate) ? 0 : rate;
+        var amount = quantity * rate;
+        amount = isNaN(amount) ? 0 : amount;
+        $('#PurchaseDetails_' + index + '__Amount').val(amount);
+        CalculateTotalAmount();
+    }
+    function CalculateTotalAmount() {
+        var totalAmt = 0;
+        $('.amount').each(function () {
+            if (!$(this).parents('tr').hasClass('hide')) {
+                var amount = parseFloat($(this).val()); amount = isNaN(amount) ? 0 : amount;
+                totalAmt = totalAmt + amount;
+            }
+        })
+        $('#TotalAmount').val(totalAmt);
+        CalculateAllTax();
+    }
+    function CalculateTotalNetAmount() {
+        var totalAmount = parseFloat($('#TotalAmount').val()); totalAmount = isNaN(totalAmount) ? 0 : totalAmount;
+        var shippingCharge = parseFloat($('#ShippingCharge').val()); shippingCharge = isNaN(shippingCharge) ? 0 : shippingCharge;
+        var extraCharges = parseFloat($('#ExtraCharge').val()); extraCharges = isNaN(extraCharges) ? 0 : extraCharges;
+        var totalDiscount = parseFloat($('#TotalDiscount').val()); totalDiscount = isNaN(totalDiscount) ? 0 : totalDiscount;
+        var totalTax = parseFloat($('#TotalTax').val()); totalTax = isNaN(totalTax) ? 0 : totalTax;
+        //Net Amount= Total Amount + Extra Charges + Shipping Charges - Discount + Total Tax
+        var totalNetAmount = totalAmount + extraCharges + shippingCharge - totalDiscount + totalTax;
+        $('#TotalNetAmount').val(totalNetAmount);
+    }
+</script>

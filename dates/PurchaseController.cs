@@ -1,154 +1,102 @@
-﻿using DS4U.MVCControls;
-using FarmersStop.Common;
-using FarmersStop.Data.Entities;
-using FarmersStop.Framework.Controllers;
-using FarmersStop.Services.Interfaces;
-using FarmersStop.Web.Common;
-using FarmersStop.Web.Models;
+﻿using FMS.Common.Helpers;
+using FMS.Data.Entities;
+using FMS.Services.Interfaces;
+using FMS.Web.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
+using System.Xml;
+using System.Xml.Serialization;
 
-namespace FarmersStop.Web.Controllers
+namespace FMS.Web.Controllers
 {
-    public class PurchaseController : BaseAdminController
+    public class PurchaseController : Controller
     {
 
-        IMaster _masterRepo;
-        IProduct _productRepo;
-        ICustomer _customerRepo;
-        public PurchaseController(IMaster masterRepo, IProduct productRepo, ICustomer customerRepo)
-        {
-            _productRepo = productRepo;
-            _masterRepo = masterRepo;
-            _customerRepo = customerRepo;
-        }
 
+        // GET: Purchase
+        IPurchase _purchaseRepo;
+        public PurchaseController(IPurchase purchaseRepo)
+        {
+            _purchaseRepo = purchaseRepo;
+        }
         public ActionResult Index()
         {
-            return View("List");
+            return RedirectToAction("Create");
         }
-
         public ActionResult List()
         {
             return View();
         }
-
-        public ActionResult GetProductList(GridParams g)
+        public ActionResult Create()
         {
-            int pageProduct = Convert.ToInt32(g.PageSize != null ? g.PageSize : 10);
-            var data = _productRepo.GetAllProducts(g);
-            return Json(new GridModelBuilder<Product>(data.List.AsQueryable(), g)
-            {
-                Key = "Id",
-                Map = o => new { o.Id, o.Name, o.ProductFullName, o.ProductCode },
-                PageCount = data.PageCount,
-                ItemsCount = data.ItemCount
-            }.Build());
+            PurchaseModel model = new PurchaseModel();
+            BindDropDowns(ref model);
+            model.PurchaseDetails.Add(new PurchaseDetailsModel());
+            model.PurchaseDetails.Add(new PurchaseDetailsModel());
+            return View(model);
         }
-
-        public ActionResult Create(int id = 0)
-        {
-            var objModel = new PurchaseModel();
-            BindDropDowns(ref objModel);
-            objModel.PurchaseDetails.Insert(0,new PurchaseDetailsModel()); // for add new rows this works as template
-            objModel.PurchaseDetails.Add(new PurchaseDetailsModel());
-            var objEntity = _productRepo.GetProductById(id);
-            if (objEntity != null)
-            {
-                //objModel.Id = objEntity.Id;
-                //objModel.Name = objEntity.Name;
-                //objModel.ProductCode = objEntity.ProductCode;
-                //objModel.ProductFullName = objEntity.ProductFullName;
-                //objModel.ProductCategoryId = objEntity.ProductCategoryId;
-                //objModel.ProductTypeId = objEntity.ProductTypeId;
-                //objModel.BrandId = objEntity.BrandId;
-            }
-
-            if (objEntity == null && id > 0)
-            {
-                return RedirectToAction("Create", new { id = 0 });
-            }
-            return View(objModel);
-        }
-
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(ProductModel objModel)
+        public ActionResult Create(PurchaseModel model)
         {
-            //BindDropDowns(ref objModel);
             if (ModelState.IsValid)
             {
-                var isExistProductName = _productRepo.CheckExistingProduct(objModel.Id, objModel.Name, objModel.ProductCategoryId, objModel.ProductTypeId, objModel.BrandId);
-
-                if (!isExistProductName)
-                {
-                    var objEntity = new Product();
-                    objEntity.Id = objModel.Id;
-                    objEntity.Name = objModel.Name;
-                    objEntity.ProductFullName = GetProductFullName(objModel);
-                    objEntity.ProductCategoryId = objModel.ProductCategoryId;
-                    objEntity.ProductTypeId = objModel.ProductTypeId;
-                    objEntity.BrandId = objModel.BrandId;
-                    objEntity.CreatedBy = CurrentUserId;
-                    objEntity.ModifiedBy = objEntity.CreatedBy;
-                    int id = _productRepo.SaveProduct(objEntity);
-                    SuccessMessage("Product saved successfully.");
-                    return RedirectToAction("List");
-                }
-                ErrorMessage("Product name already exist.");
 
             }
-            return View(objModel);
+            var entity = new Purchase();
+            BindPurchaseEntity(ref entity, model);
+            model.PurchaseDetails = model.PurchaseDetails.Where(a => a.IsActive == true && a.ProductCode>0).ToList();
+            var detailXML = XMLXelpers.Serialize(model.PurchaseDetails);
+            _purchaseRepo.SavePurchase(entity, detailXML);
+            return RedirectToAction("create");
         }
-
-        private string GetProductFullName(ProductModel productModel)
+        private void BindPurchaseEntity(ref Purchase entity, PurchaseModel model)
         {
-            StringBuilder productFullName = new StringBuilder();
-            productFullName.Append(productModel.Name);
-            productFullName.Append("-");
-            var productCategory = productModel.ProductCategories.Where(a => Convert.ToInt32(a.Value) == productModel.ProductCategoryId).FirstOrDefault();
-            if (productCategory != null)
-            {
-
-                productFullName.Append(productCategory.Text);
-                productFullName.Append("-");
-            }
-            var productType = productModel.ProductTypes.Where(a => Convert.ToInt32(a.Value) == productModel.ProductTypeId).FirstOrDefault();
-            if (productType != null)
-            {
-
-                productFullName.Append(productType.Text);
-                productFullName.Append("-");
-            }
-            var brand = productModel.Brands.Where(a => Convert.ToInt32(a.Value) == productModel.BrandId).FirstOrDefault();
-            if (brand != null)
-            {
-
-                productFullName.Append(brand.Text);
-            }
-            return productFullName.ToString();
+            entity.Id = model.Id;
+            entity.Date = Convert.ToDateTime(model.Date);
+            entity.BillNo = model.BillNo;
+            entity.VendorId = model.VendorId;
+            entity.VendorAddress = model.VendorAddress;
+            entity.TotalDiscount = model.TotalDiscount;
+            entity.ShippingCharge = model.ShippingCharge;
+            entity.ExtraCharge = model.ExtraCharge;
+            entity.TotalAmount = model.TotalAmount;
+            entity.TotalTax = model.TotalTax;
+            entity.TotalNetAmount = model.TotalNetAmount;
+            entity.IGSTRate = model.IGSTRate;
+            entity.IGSTAmount = model.IGSTAmount;
+            entity.SGSTRate = model.SGSTRate;
+            entity.SGSTAmount = model.SGSTAmount;
+            entity.CGSTRate = model.CGSTRate;
+            entity.CGSTAmount = model.CGSTAmount;
+            entity.TaxIGSTId = Convert.ToInt32(model.TaxIGSTId);
+            entity.TaxSGSTId = Convert.ToInt32(model.TaxSGSTId);
+            entity.TaxCGSTId = Convert.ToInt32(model.TaxCGSTId);
         }
-
         private void BindDropDowns(ref PurchaseModel objModel)
         {
-            objModel.Products = _productRepo.GetProductDropdown().ToSelectList();
-            objModel.Vendors = _customerRepo.GetVendorDropdown().ToSelectList();
-            objModel.Units = _masterRepo.GetUnitDropdown().ToSelectList();
-            objModel.IGST = _masterRepo.GetTaxDropdown(TaxType.IGST.ToInt()).ToSelectList();
-            objModel.CGST = _masterRepo.GetTaxDropdown(TaxType.CGST.ToInt()).ToSelectList();
-            objModel.SGST = _masterRepo.GetTaxDropdown(TaxType.SGST.ToInt()).ToSelectList();
+            objModel.Products = new List<SelectListItem>();
+            objModel.Vendors = new List<SelectListItem>();
+            objModel.Units = new List<SelectListItem>();
+            objModel.IGST = new List<SelectListItem>();
+            objModel.CGST = new List<SelectListItem>();
+            objModel.SGST = new List<SelectListItem>();
+
+            objModel.Products.Add(new SelectListItem() { Text = "Product 1", Value = "1" });
+            objModel.Products.Add(new SelectListItem() { Text = "Product 2", Value = "2" });
+            objModel.Vendors.Add(new SelectListItem() { Text = "Vendor 1", Value = "1" });
+            objModel.Units.Add(new SelectListItem() { Text = "Unit 1", Value = "1" });
+            objModel.IGST.Add(new SelectListItem() { Text = "IGST 18 %", Value = "1" });
+            objModel.CGST.Add(new SelectListItem() { Text = "CGST 18 %", Value = "2" });
+            objModel.SGST.Add(new SelectListItem() { Text = "SGST 18 %", Value = "3" });
         }
-
-        [HttpGet]
-        public ActionResult GetProductType(int productCategoryId = 0)
+        public decimal GetTaxRate(int taxId)
         {
-            var productTypes = _masterRepo.GetProductTypeDropdown(productCategoryId);
-            return Json(productTypes, JsonRequestBehavior.AllowGet);
-
+            return 18.00M;
         }
     }
 }
