@@ -1,4 +1,4 @@
-﻿@model FMS.Web.Models.PurchaseModel
+@model FarmersStop.Web.Models.PurchaseModel
 @{
     ViewBag.Title = "Purchase";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -185,7 +185,7 @@
                         <div class="col-sm-6">
                             @Html.DropDownListFor(m => m.TaxIGSTId, Model.IGST, "No Tax", new { @class = "form-control select2", @onchange = "CalculateTax('TaxIGSTId','lblIGSTTax')" })
                         </div>
-                        @Html.LabelFor(m => m.IGSTAmount, new { @class = "col-sm-2", @id = "lblIGSTTax" })
+                        @Html.DisplayFor(m => m.IGSTAmount, new { @class = "col-sm-2", @id = "lblIGSTTax" })
                     </div>
                 </div>
                 <div class="col-sm-4">
@@ -212,7 +212,7 @@
                         <div class="col-sm-6">
                             @Html.DropDownListFor(m => m.TaxCGSTId, Model.CGST, "No Tax", new { @class = "form-control select2", @onchange = "CalculateTax('TaxCGSTId','lblCGSTTax')" })
                         </div>
-                        @Html.LabelFor(m => m.CGSTAmount, new { @class = "col-sm-2", @id = "lblCGSTTax" })
+                        @Html.DisplayFor(m => m.CGSTAmount, new { @class = "col-sm-2", @id = "lblCGSTTax" })
                     </div>
                 </div>
                 <div class="col-sm-4">
@@ -239,7 +239,7 @@
                         <div class="col-sm-6">
                             @Html.DropDownListFor(m => m.TaxSGSTId, Model.SGST, "No Tax", new { @class = "form-control select2", @onchange = "CalculateTax('TaxSGSTId','lblSGSTTax')" })
                         </div>
-                        @Html.LabelFor(m => m.SGSTAmount, new { @class = "col-sm-2", @id = "lblSGSTTax" })
+                        @Html.DisplayFor(m => m.SGSTAmount, new { @class = "col-sm-2", @id = "lblSGSTTax" })
                     </div>
                 </div>
                 <div class="col-sm-4">
@@ -294,8 +294,8 @@
         $('#btnAddNew').click(function () {
             AddNewRow(-1, 0);
         })
-        $(document).off('click', '.productId')
-            .on('click', '.productId', function () {
+        $(document).off('change', '.productId')
+            .on('change', '.productId', function () {
                 var productId = $(this).val();
                 var productRowId = $(this).attr('id');
                 if (productId > 0) {
@@ -304,7 +304,6 @@
                             ErrorMessage('Same item already selected. Please select another item.');
                             $('#' + productRowId).val('');
                             $('#' + productRowId).focus();
-
                         }
                     })
                 }
@@ -342,7 +341,6 @@
         var IGST = $('#TaxIGSTId').val();
         var CGST = $('#TaxCGSTId').val();
         var SGST = $('#TaxSGSTId').val();
-
         if (IGST != '' && (CGST != '' || SGST != '')) {
             ErrorMessage('Please select either IGST or CGST and SGST');
             return false;
@@ -361,7 +359,6 @@
         $tr.addClass('hide');
         //var $tr1 = $('#purchasedetails').children('tr:first');
         //$tr1.html($tr1.html().replace(/_1_/g, '_0_'));
-
     }
     function AddNewRow(index, parentId) {
         var $tr = $('#temptableforrow').children('tr:first');
@@ -377,7 +374,7 @@
             $clone.find('input:text').val('');
             $clone.attr('data-parent-id', parentId);
             $clone.attr('data-free-row', true);
-            $clone.find('.rate').attr('readonly', true);
+            $clone.find('.rate').attr('disabled', true);
             $clone.find('.parentId').val(parentId);
             $clone.find('.isactive').val(true);
             $('#purchasedetails tr').eq(index).after($clone);
